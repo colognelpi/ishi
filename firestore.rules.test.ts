@@ -1,0 +1,125 @@
+/**
+ * Security Rules Verification Suite (Dirty Dozen Payloads)
+ * Reference specification for @firebase/rules-unit-testing against firestore.rules.
+ */
+
+export const DIRTY_DOZEN_CASES = [
+  {
+    name: '1. Unauthenticated get on /responses/INV-ISHAAC-IRISH-001',
+    operation: 'get',
+    path: '/responses/INV-ISHAAC-IRISH-001',
+    auth: null,
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    name: '2. Unauthenticated list on /responses',
+    operation: 'list',
+    path: '/responses',
+    auth: null,
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    name: '3. Unauthenticated list on /invitation_opens',
+    operation: 'list',
+    path: '/invitation_opens',
+    auth: null,
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    name: '4. Mismatched invitationId vs document path ID',
+    operation: 'create',
+    path: '/responses/INV-ISHAAC-IRISH-001',
+    payload: {
+      invitationId: 'INV-OTHER-002',
+      creatorName: 'Ishaac',
+      recipientName: 'Irish',
+      answer: 'YES',
+      status: 'answered',
+    },
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    name: '5. Invalid answer enum value',
+    operation: 'create',
+    path: '/responses/INV-ISHAAC-IRISH-001',
+    payload: {
+      invitationId: 'INV-ISHAAC-IRISH-001',
+      creatorName: 'Ishaac',
+      recipientName: 'Irish',
+      answer: 'MAYBE',
+      status: 'answered',
+    },
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    name: '6. Shadow field injection (isVerified: true)',
+    operation: 'create',
+    path: '/responses/INV-ISHAAC-IRISH-001',
+    payload: {
+      invitationId: 'INV-ISHAAC-IRISH-001',
+      creatorName: 'Ishaac',
+      recipientName: 'Irish',
+      answer: 'YES',
+      status: 'answered',
+      isVerified: true,
+    },
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    name: '7. Forged client timestamp instead of serverTimestamp',
+    operation: 'create',
+    path: '/responses/INV-ISHAAC-IRISH-001',
+    payload: {
+      invitationId: 'INV-ISHAAC-IRISH-001',
+      creatorName: 'Ishaac',
+      recipientName: 'Irish',
+      answer: 'YES',
+      status: 'answered',
+      submittedAt: '2026-01-01T00:00:00Z',
+      createdAt: '2026-01-01T00:00:00Z',
+    },
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    name: '8. Mutating an immutable submitted response',
+    operation: 'update',
+    path: '/responses/INV-ISHAAC-IRISH-001',
+    payload: { answer: 'YES' },
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    name: '9. Invalid document ID characters (ID poisoning)',
+    operation: 'create',
+    path: '/responses/bad!id',
+    payload: { invitationId: 'bad!id' },
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    name: '10. Oversized creatorName exceeding 60 chars',
+    operation: 'create',
+    path: '/responses/INV-ISHAAC-IRISH-001',
+    payload: {
+      invitationId: 'INV-ISHAAC-IRISH-001',
+      creatorName: 'I'.repeat(500),
+      recipientName: 'Irish',
+      answer: 'YES',
+      status: 'answered',
+    },
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    name: '11. Non-admin signed-in user attempting get on /responses',
+    operation: 'get',
+    path: '/responses/INV-ISHAAC-IRISH-001',
+    auth: { uid: 'stranger-123', email: 'stranger@example.com', email_verified: true },
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    name: '12. Self-assigning admin privilege in /admins',
+    operation: 'create',
+    path: '/admins/stranger-123',
+    auth: { uid: 'stranger-123', email: 'stranger@example.com', email_verified: true },
+    payload: { role: 'admin' },
+    expected: 'PERMISSION_DENIED',
+  },
+];

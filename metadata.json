@@ -1,0 +1,6 @@
+{
+  "name": "A Little Something for You.",
+  "description": "A personalized dreamy blue romantic arcade confession experience created by Ishaac for Irish.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,129 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 4 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isBootstrappedAdmin() {
+      return isSignedIn()
+        && request.auth.token.email_verified == true
+        && request.auth.token.email == 'larasatifannisa@gmail.com';
+    }
+
+    function isAdmin() {
+      return isBootstrappedAdmin()
+        || (isSignedIn()
+            && request.auth.token.email_verified == true
+            && exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
+    }
+
+    function isValidResponse(data) {
+      return data.keys().hasAll([
+          'invitationId',
+          'creatorName',
+          'recipientName',
+          'answer',
+          'status',
+          'submittedAt',
+          'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'invitationId',
+          'creatorName',
+          'recipientName',
+          'answer',
+          'status',
+          'submittedAt',
+          'createdAt'
+        ])
+        && data.invitationId is string
+        && data.invitationId.size() >= 4
+        && data.invitationId.size() <= 100
+        && data.invitationId.matches('^INV-[A-Z0-9-]+$')
+        && data.creatorName is string
+        && data.creatorName.size() >= 1
+        && data.creatorName.size() <= 60
+        && data.recipientName is string
+        && data.recipientName.size() >= 1
+        && data.recipientName.size() <= 60
+        && data.answer in ['YES', 'NO']
+        && data.status == 'answered'
+        && data.submittedAt is timestamp
+        && data.createdAt is timestamp;
+    }
+
+    function isValidInvitationOpen(data) {
+      return data.keys().hasAll([
+          'invitationId',
+          'recipientName',
+          'eventType',
+          'openedAt'
+        ])
+        && data.keys().hasOnly([
+          'invitationId',
+          'recipientName',
+          'eventType',
+          'openedAt'
+        ])
+        && data.invitationId is string
+        && data.invitationId.size() >= 4
+        && data.invitationId.size() <= 100
+        && data.invitationId.matches('^INV-[A-Z0-9-]+$')
+        && data.recipientName is string
+        && data.recipientName.size() >= 1
+        && data.recipientName.size() <= 60
+        && data.eventType == 'OPENED'
+        && data.openedAt is timestamp;
+    }
+
+    // Connection health check
+    match /test/connection {
+      allow get: if true;
+      allow list, create, update, delete: if false;
+    }
+
+    // Admin registry (read own UID record only; managed via Firebase Console)
+    match /admins/{adminId} {
+      allow get: if isValidId(adminId) && isSignedIn() && request.auth.uid == adminId;
+      allow list, create, update, delete: if false;
+    }
+
+    // Immutable confession responses keyed by invitationId
+    match /responses/{responseId} {
+      allow get: if isValidId(responseId) && isAdmin();
+      allow list: if isBootstrappedAdmin() && resource.data.status == 'answered';
+      allow create: if isValidId(responseId)
+        && isValidResponse(incoming())
+        && incoming().invitationId == responseId
+        && incoming().submittedAt == request.time
+        && incoming().createdAt == request.time;
+      allow update: if false;
+      allow delete: if isValidId(responseId) && isAdmin();
+    }
+
+    // Append-only invitation open events
+    match /invitation_opens/{openId} {
+      allow get: if isValidId(openId) && isAdmin();
+      allow list: if isBootstrappedAdmin() && resource.data.eventType == 'OPENED';
+      allow create: if isValidId(openId)
+        && isValidInvitationOpen(incoming())
+        && incoming().openedAt == request.time;
+      allow update: if false;
+      allow delete: if isValidId(openId) && isAdmin();
+    }
+  }
+}

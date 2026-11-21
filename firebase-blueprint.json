@@ -1,0 +1,117 @@
+{
+  "entities": {
+    "ConfessionResponse": {
+      "title": "ConfessionResponse",
+      "description": "Immutable confession response submitted by the recipient for a specific invitation ID.",
+      "type": "object",
+      "properties": {
+        "invitationId": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 100,
+          "pattern": "^INV-[A-Z0-9-]+$",
+          "description": "Unique invitation identifier matching the document ID."
+        },
+        "creatorName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60,
+          "description": "Name of the invitation creator."
+        },
+        "recipientName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60,
+          "description": "Name of the invitation recipient."
+        },
+        "answer": {
+          "type": "string",
+          "enum": ["YES", "NO"],
+          "description": "Actual answer chosen by the recipient."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["answered"],
+          "description": "Submission status once recorded."
+        },
+        "submittedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the answer was submitted."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the document was created."
+        }
+      },
+      "required": [
+        "invitationId",
+        "creatorName",
+        "recipientName",
+        "answer",
+        "status",
+        "submittedAt",
+        "createdAt"
+      ]
+    },
+    "InvitationOpen": {
+      "title": "InvitationOpen",
+      "description": "Append-only event recorded when the recipient opens the invitation.",
+      "type": "object",
+      "properties": {
+        "invitationId": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 100,
+          "pattern": "^INV-[A-Z0-9-]+$",
+          "description": "Unique invitation identifier."
+        },
+        "recipientName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60,
+          "description": "Recipient name configured on the invitation."
+        },
+        "eventType": {
+          "type": "string",
+          "enum": ["OPENED"],
+          "description": "Event type marker."
+        },
+        "openedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the invitation was opened."
+        }
+      },
+      "required": ["invitationId", "recipientName", "eventType", "openedAt"]
+    },
+    "AdminUser": {
+      "title": "AdminUser",
+      "description": "Authorized admin UID registry managed out-of-band in Firebase Console.",
+      "type": "object",
+      "properties": {
+        "role": {
+          "type": "string",
+          "enum": ["admin"],
+          "description": "Admin role marker."
+        }
+      },
+      "required": ["role"]
+    }
+  },
+  "firestore": {
+    "/responses/{responseId}": {
+      "schema": { "$ref": "#/entities/ConfessionResponse" },
+      "description": "Stores immutable recipient responses keyed by invitationId."
+    },
+    "/invitation_opens/{openId}": {
+      "schema": { "$ref": "#/entities/InvitationOpen" },
+      "description": "Stores invitation open timestamps for the owner dashboard."
+    },
+    "/admins/{adminId}": {
+      "schema": { "$ref": "#/entities/AdminUser" },
+      "description": "Authorizes additional owner UIDs for the private /admin dashboard."
+    }
+  }
+}

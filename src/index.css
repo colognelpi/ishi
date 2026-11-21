@@ -1,0 +1,145 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Fraunces", Georgia, serif;
+  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+@layer base {
+  html,
+  body {
+    font-family: var(--font-sans);
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+}
+
+/* Smooth dreamy blue arcade animations (compositor-only) */
+@keyframes floatSlow {
+  0%,
+  100% {
+    transform: translate3d(0, 0px, 0);
+  }
+  50% {
+    transform: translate3d(0, -12px, 0);
+  }
+}
+
+@keyframes floatGentle {
+  0%,
+  100% {
+    transform: translate3d(0, 0px, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(0, -8px, 0) rotate(2deg);
+  }
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.15);
+  }
+}
+
+@keyframes heartBeatSoft {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  15% {
+    transform: scale(1.08);
+  }
+  30% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(1);
+  }
+}
+
+@keyframes riseHeart {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 20px, 0) scale(0.7);
+  }
+  20% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(0, -140px, 0) scale(1.15);
+  }
+}
+
+.animate-float-slow {
+  animation: floatSlow 5.5s ease-in-out infinite;
+}
+
+.animate-float-gentle {
+  animation: floatGentle 4.2s ease-in-out infinite;
+}
+
+.animate-twinkle {
+  animation: twinkle 3.6s ease-in-out infinite;
+}
+
+.animate-heartbeat-soft {
+  animation: heartBeatSoft 2.4s ease-in-out infinite;
+}
+
+.animate-rise-heart {
+  animation: riseHeart 2.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* 3D card flip helpers for Memory Lane */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
+/* Subtle paper texture for the final love letter */
+.letter-paper-texture {
+  background-color: #f4f9ff;
+  background-image:
+    radial-gradient(rgba(96, 181, 255, 0.08) 1px, transparent 0),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(235, 245, 255, 0.95) 100%);
+  background-size: 20px 20px, 100% 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-slow,
+  .animate-float-gentle,
+  .animate-twinkle,
+  .animate-heartbeat-soft,
+  .animate-rise-heart {
+    animation: none !important;
+  }
+}
